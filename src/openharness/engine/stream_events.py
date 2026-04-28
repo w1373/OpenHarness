@@ -29,6 +29,7 @@ class ToolExecutionStarted:
     """The engine is about to execute a tool."""
 
     tool_name: str
+    tool_id: str
     tool_input: dict[str, Any]
 
 
@@ -38,7 +39,9 @@ class ToolExecutionCompleted:
 
     tool_name: str
     output: str
+    tool_id: str
     is_error: bool = False
+
 
 
 @dataclass(frozen=True)
