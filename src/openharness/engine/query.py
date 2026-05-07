@@ -9,8 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import AsyncIterator, Awaitable, Callable
 
-from langsmith import traceable
-
 from openharness.api.client import (
     ApiMessageCompleteEvent,
     ApiMessageRequest,
@@ -67,7 +65,6 @@ class QueryContext:
     tool_metadata: dict[str, object] | None = None
 
 
-@traceable
 async def run_query(
     context: QueryContext,
     messages: list[ConversationMessage],
