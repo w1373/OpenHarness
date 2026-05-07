@@ -31,6 +31,7 @@ class ToolExecutionStarted:
     tool_name: str
     tool_id: str
     tool_input: dict[str, Any]
+    tool_id:str
 
 
 @dataclass(frozen=True)
@@ -38,6 +39,7 @@ class ToolExecutionCompleted:
     """A tool has finished executing."""
 
     tool_name: str
+    tool_id: str
     output: str
     tool_id: str
     is_error: bool = False
