@@ -25,6 +25,9 @@ class SkillTool(BaseTool):
         del arguments
         return True
 
+    def truncated_output(self):
+        return False
+
     async def execute(self, arguments: SkillToolInput, context: ToolExecutionContext) -> ToolResult:
         registry = load_skill_registry(
             context.cwd,

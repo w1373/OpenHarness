@@ -43,6 +43,9 @@ class BaseTool(ABC):
     async def execute(self, arguments: BaseModel, context: ToolExecutionContext) -> ToolResult:
         """Execute the tool."""
 
+    def truncated_output(self):
+        return True
+
     def is_read_only(self, arguments: BaseModel) -> bool:
         """Return whether the invocation is read-only."""
         del arguments

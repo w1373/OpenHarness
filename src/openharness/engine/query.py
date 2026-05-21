@@ -972,11 +972,16 @@ async def _execute_tool_call(
     elapsed = time.monotonic() - t0
     log.debug("executed %s in %.2fs err=%s output_len=%d",
               tool_name, elapsed, result.is_error, len(result.output or ""))
-    inline_output, artifact_path = _offload_tool_output_if_needed(
-        tool_name=tool_name,
-        tool_use_id=tool_use_id,
-        output=result.output,
-    )
+
+    if tool.truncated_output():
+        inline_output, artifact_path = _offload_tool_output_if_needed(
+            tool_name=tool_name,
+            tool_use_id=tool_use_id,
+            output=result.output,
+        )
+    else:
+        inline_output,artifact_path = result.output,None
+
     if artifact_path is not None:
         _remember_active_artifact(context.tool_metadata, str(artifact_path))
     tool_result = ToolResultBlock(
