@@ -749,6 +749,8 @@ async def run_query(
                     final_message = event.message
                     usage = event.usage
         except Exception as exc:
+            from loguru import logger
+            logger.exception("Error occurred:")
             error_msg = str(exc)
             if _is_completion_token_limit_error(exc):
                 supported_limit = _extract_completion_token_limit(exc)
