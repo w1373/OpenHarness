@@ -266,8 +266,9 @@ class McpClientManager:
         try:
             resource_result = await session.list_resources()
         except Exception as exc:
-            if "Method not found" not in str(exc):
-                raise
+            pass
+            # if "Method not found" not in str(exc):
+            #     raise
         tools = [
             McpToolInfo(
                 server_name=name,
