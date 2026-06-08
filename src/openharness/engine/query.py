@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -525,13 +526,23 @@ def _offload_tool_output_if_needed(
     tool_name: str,
     tool_use_id: str,
     output: str,
+    tool_metadata: dict,
 ) -> tuple[str, Path | None]:
     inline_limit = tool_output_inline_chars()
     if len(output) <= inline_limit:
         return output, None
 
+    if "context" in tool_metadata:
+        tool_artifact_dir = Path(os.path.join(os.environ['AGENT_ROOT_PATH'],
+                     tool_metadata['context'].agent,
+                     "users", tool_metadata['context'].user_id, "tool_artifacts"))
+        tool_artifact_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        tool_artifact_dir = _tool_artifact_dir()
+
+
     artifact_path = (
-        _tool_artifact_dir()
+        tool_artifact_dir
         / f"{time.strftime('%Y%m%d-%H%M%S')}-{_safe_tool_artifact_name(tool_name)}-{uuid4().hex[:12]}.txt"
     )
     artifact_path.write_text(output, encoding="utf-8", errors="replace")
@@ -980,6 +991,7 @@ async def _execute_tool_call(
             tool_name=tool_name,
             tool_use_id=tool_use_id,
             output=result.output,
+            tool_metadata = context.tool_metadata
         )
     else:
         inline_output,artifact_path = result.output,None
