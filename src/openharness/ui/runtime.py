@@ -98,6 +98,8 @@ class RuntimeBundle:
     extra_plugin_roots: tuple[str, ...] = ()
     memory_backend: MemoryCommandBackend | None = None
     include_project_memory: bool = True
+    is_alive: bool = True
+    backup_message:list[ConversationMessage] = None
 
     def current_settings(self):
         """Return the effective settings for this session.

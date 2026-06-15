@@ -53,6 +53,7 @@ class QueryEngine:
         self._tool_metadata = tool_metadata or {}
         self._messages: list[ConversationMessage] = []
         self._cost_tracker = CostTracker()
+        self._metadata: dict[str, object] = {}
 
     @property
     def messages(self) -> list[ConversationMessage]:
@@ -144,8 +145,15 @@ class QueryEngine:
             return bool(msg.tool_uses)
         return False
 
+    def is_running(self) -> bool:
+        return "running" in self._metadata and self._metadata["running"] == True
+
+    def query_stop(self):
+        self._metadata["running"] = False
+
     async def submit_message(self, prompt: str | ConversationMessage) -> AsyncIterator[StreamEvent]:
         """Append a user message and execute the query loop."""
+        self._metadata["running"] = True
         user_message = (
             prompt
             if isinstance(prompt, ConversationMessage)
@@ -177,6 +185,7 @@ class QueryEngine:
             ask_user_prompt=self._ask_user_prompt,
             hook_executor=self._hook_executor,
             tool_metadata=self._tool_metadata,
+            metadata=self._metadata
         )
         query_messages = list(self._messages)
         coordinator_context = self._build_coordinator_context_message()
@@ -188,9 +197,11 @@ class QueryEngine:
             if usage is not None:
                 self._cost_tracker.add(usage)
             yield event
+        self._metadata["running"] = False
 
     async def continue_pending(self, *, max_turns: int | None = None) -> AsyncIterator[StreamEvent]:
         """Continue an interrupted tool loop without appending a new user message."""
+        self._metadata["running"] = True
         context = QueryContext(
             api_client=self._api_client,
             tool_registry=self._tool_registry,
@@ -206,8 +217,10 @@ class QueryEngine:
             ask_user_prompt=self._ask_user_prompt,
             hook_executor=self._hook_executor,
             tool_metadata=self._tool_metadata,
+            metadata=self._metadata
         )
         async for event, usage in run_query(context, self._messages):
             if usage is not None:
                 self._cost_tracker.add(usage)
             yield event
+        self._metadata["running"] = False

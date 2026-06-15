@@ -153,7 +153,14 @@ class QueryContext:
     max_turns: int | None = 200
     hook_executor: HookExecutor | None = None
     tool_metadata: dict[str, object] | None = None
+    metadata: dict[str,object] = False
 
+def is_context_running(context: QueryContext) -> bool:
+    if context.metadata is not None and "running" in context.metadata and context.metadata[
+        "running"] == False:
+        return False
+    else:
+        return True
 
 def _append_capped_unique(bucket: list[Any], value: Any, *, limit: int) -> None:
     if value in bucket:
@@ -708,6 +715,8 @@ async def run_query(
 
     turn_count = 0
     while context.max_turns is None or turn_count < context.max_turns:
+        if not is_context_running(context):
+            return
         turn_count += 1
         if effective_max_tokens != context.max_tokens and not reported_token_clamp:
             reported_token_clamp = True
@@ -744,6 +753,8 @@ async def run_query(
                     tools=context.tool_registry.to_api_schema(),
                 )
             ):
+                if not is_context_running(context):
+                    return
                 if isinstance(event, ApiTextDeltaEvent):
                     yield AssistantTextDelta(text=event.text), None
                     continue
@@ -828,7 +839,8 @@ async def run_query(
             return
 
         tool_calls = final_message.tool_uses
-
+        if not is_context_running(context):
+            return
         if len(tool_calls) == 1:
             # Single tool: sequential (stream events immediately)
             tc = tool_calls[0]
@@ -880,6 +892,8 @@ async def run_query(
                     tool_id=tc.id
                 ), None
 
+        if not is_context_running(context):
+            return
         messages.append(ConversationMessage(role="user", content=tool_results))
 
     if context.max_turns is not None:
