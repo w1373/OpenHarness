@@ -31,7 +31,7 @@ from openharness.engine.messages import (
     ImageBlock,
     TextBlock,
     ToolResultBlock,
-    ToolUseBlock,
+    ToolUseBlock, VideoBlock,
 )
 
 log = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ def _convert_messages_to_openai(
         elif msg.role == "user":
             # User messages may contain text or tool_result blocks
             tool_results = [b for b in msg.content if isinstance(b, ToolResultBlock)]
-            user_blocks = [b for b in msg.content if isinstance(b, (TextBlock, ImageBlock))]
+            user_blocks = [b for b in msg.content if isinstance(b, (TextBlock, ImageBlock, VideoBlock))]
 
             if tool_results:
                 # Each tool result becomes a separate message with role="tool"
@@ -127,10 +127,6 @@ def _convert_messages_to_openai(
 
 def _convert_user_content_to_openai(blocks: list[ContentBlock]) -> str | list[dict[str, Any]]:
     """Convert user text/image blocks into OpenAI chat content."""
-    has_image = any(isinstance(block, ImageBlock) for block in blocks)
-    if not has_image:
-        return "".join(block.text for block in blocks if isinstance(block, TextBlock))
-
     content: list[dict[str, Any]] = []
     for block in blocks:
         if isinstance(block, TextBlock) and block.text:
@@ -141,6 +137,11 @@ def _convert_user_content_to_openai(blocks: list[ContentBlock]) -> str | list[di
                 "image_url": {
                     "url": f"data:{block.media_type};base64,{block.data}",
                 },
+            })
+        elif isinstance(block, VideoBlock):
+            content.append({
+                "type": "video_url",
+                "video_url": block.video_url
             })
     return content
 

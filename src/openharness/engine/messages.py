@@ -54,9 +54,13 @@ class ToolResultBlock(BaseModel):
     content: str
     is_error: bool = False
 
+class VideoBlock(BaseModel):
+    """Video content encoded inline for multimodal providers."""
+    type: Literal["video_url"] = "video_url"
+    video_url: dict[str, Any]
 
 ContentBlock = Annotated[
-    TextBlock | ImageBlock | ToolUseBlock | ToolResultBlock,
+    TextBlock | ImageBlock | ToolUseBlock | ToolResultBlock | VideoBlock,
     Field(discriminator="type"),
 ]
 
