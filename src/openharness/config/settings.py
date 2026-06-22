@@ -120,6 +120,7 @@ class ProviderProfile(BaseModel):
     allowed_models: list[str] = Field(default_factory=list)
     context_window_tokens: int | None = None
     auto_compact_threshold_tokens: int | None = None
+    api_key: str | None = None
 
     @property
     def resolved_model(self) -> str:
