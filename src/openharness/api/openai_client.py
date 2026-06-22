@@ -304,7 +304,7 @@ class OpenAICompatibleClient:
         usage_data: dict[str, int] = {}
         # Buffer to strip inline <think>…</think> blocks across streaming chunks.
         _think_buf = ""
-
+        params = self.before_create_chat(params)
         stream = await self._client.chat.completions.create(**params)
         async for chunk in stream:
             if not chunk.choices:
@@ -415,6 +415,9 @@ class OpenAICompatibleClient:
         if status == 429:
             return RateLimitFailure(msg)
         return RequestFailure(msg)
+
+    def before_create_chat(self, params):
+        return params
 
 
 # Matches complete <think>…</think> blocks (DOTALL so newlines are included).
